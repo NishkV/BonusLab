@@ -8,6 +8,12 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y cmake && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN python -m pip install --upgrade pip
 RUN python -m pip install -r requirements.txt
