@@ -2,11 +2,18 @@ import cv2
 import dlib
 import numpy as np
 from flask import Flask, Response
+import os
 
 app = Flask(__name__)
 
+# Get the current directory of the script
+current_directory = os.path.dirname(os.path.abspath(__file__))
+# Construct the full path to the shape predictor file
+predictor_path = os.path.join(current_directory, 'shape_predictor_68_face_landmarks.dat')
+
+# Initialize the face detector and shape predictor
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+predictor = dlib.shape_predictor(predictor_path)
 
 def detect_gaze(landmarks, frame, gray):
     left_eye_region = np.array([(landmarks.part(36).x, landmarks.part(36).y),
