@@ -1,30 +1,30 @@
-# syntax=docker/dockerfile:1
+# Use the official Python image from the Docker Hub
+FROM python:3.11.5-slim
 
-ARG PYTHON_VERSION=3.11.5
-FROM python:${PYTHON_VERSION}-slim as base
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
+# Set the working directory in the container
 WORKDIR /app
 
+# Copy the requirements.txt file into the container
 COPY requirements.txt .
-RUN python -m pip install --upgrade pip
-RUN python -m pip install -r requirements.txt
 
+# Install CMake
+RUN apt-get update && \
+    apt-get install -y cmake && \
+    rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install the Python packages from requirements.txt
+RUN python -m pip install --upgrade pip && \
+    python -m pip install -r requirements.txt
+
+# Copy the rest of the application code into the container
 COPY . .
 
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid 10001 \
-    appuser
+# Add a user to run the application (optional but recommended for security)
+RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" appuser && \
+    chown -R appuser:appuser /app
 
+# Switch to the new user
 USER appuser
 
-EXPOSE 8000
-
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "wsgi:app"]
+# Command to run the application
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "focus1:app"]
