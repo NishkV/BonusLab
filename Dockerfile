@@ -4,27 +4,25 @@ FROM python:3.11.5-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements.txt file into the container
+# Copy the requirements file into the container at /app
 COPY requirements.txt .
 
-# Install CMake
+# Install cmake, g++, and other dependencies
 RUN apt-get update && \
-    apt-get install -y cmake && \
+    apt-get install -y cmake g++ && \
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install the Python packages from requirements.txt
-RUN python -m pip install --upgrade pip && \
-    python -m pip install -r requirements.txt
+# Install any dependencies specified in requirements.txt
+RUN python -m pip install --upgrade pip
 
-# Copy the rest of the application code into the container
+# Install dlib from a precompiled wheel if available
+RUN pip install dlib==19.24.4 --find-links https://piwheels.org/simple
+
+# Install the remaining dependencies
+RUN python -m pip install -r requirements.txt
+
+# Copy the rest of the application code to /app
 COPY . .
 
-# Add a user to run the application (optional but recommended for security)
-RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" appuser && \
-    chown -R appuser:appuser /app
-
-# Switch to the new user
-USER appuser
-
-# Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "focus1:app"]
+# Specify the command to run the application
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "wsgi:app"]
